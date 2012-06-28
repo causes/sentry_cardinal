@@ -10,6 +10,13 @@ applications).
   frames with a `context_type` of 'application' will be shown, but you can
   easily toggle to show the full or framework tracebacks.
 
+### Grouping of exceptions by a `cleaned_function` name
+  Frameworks like rails that dynamically create functions sometimes create
+  function names that differ, but are functionally identical. In these cases,
+  the client may want to specify a `cleaned_function` attribute for a frame that
+  will be used to compute the message's group rather than the `function`
+  attribute.
+
 ## Usage
 Add `sentry_cardinal` to sentry's `INSTALLED_APPS`. You will need to configure
 your client to send stack traces with the interface

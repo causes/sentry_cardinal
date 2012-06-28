@@ -4,6 +4,22 @@ from sentry.web.helpers import render_to_string
 class Stacktrace(sentry.interfaces.Stacktrace):
     score = 1000
 
+    def get_hash(self):
+            output = []
+            for frame in self.frames:
+                if frame.get('module'):
+                    output.append(frame['module'])
+                else:
+                    output.append(frame['filename'])
+
+                if frame.get('cleaned_function'):
+                    output.append(frame['cleaned_function'])
+                elif frame.get('function'):
+                    output.append(frame['function'])
+                else:
+                    output.append(frame['lineno'])
+            return output
+
     def to_html(self, event):
         frames = []
         for frame in self.frames:
