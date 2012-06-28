@@ -1,0 +1,79 @@
+{% load i18n %}
+{% load sentry_helpers %}
+
+<div id="traceback" class="module">
+    <div class="page-header">
+      <a href="javascript:void(0)" data-container="#raw_stacktrace" data-title="Stacktrace" class="popup btn small pull-right">{% trans "Raw" %}</a>
+      <h2>{% trans "Stacktrace" %}</h2>
+      <ul class="nav nav-tabs">
+        <li data-filter='application' class="active"><a href="#">Application</a></li>
+        <li data-filter='framework'><a href="#">Framework</a></li>
+        <li data-filter=''><a href="#">Full</a></li>
+      </ul>
+    </div>
+    <div class="module-content">
+        <ul class="traceback">
+            {% for frame in frames %}
+                <li class="frame {{frame.context_type}}">
+                    <p>
+                        <code>{{ frame.filename }}</code>
+                        {% if frame.function %} in <code>{{ frame.function }}</code>{% endif %}
+                        {% if not frame.context %} at line <code>{{ frame.lineno }}</code>{% endif %}
+                    </p>
+
+                    {% if frame.context %}
+                        <ol start="{{ frame.start_lineno }}" class="context expandable" id="c{{ forloop.counter0 }}">
+                        {% for num, line in frame.context %}
+                            <li{% if num == frame.lineno %} class="active"{% else %} class="stack{{ forloop.parentloop.counter0 }} closed"{% endif %} onclick="$('.stack{{ forloop.parentloop.counter0 }}').toggleClass('closed')"><pre>{{ line }}</pre></li>
+                        {% endfor %}
+                        </ol>
+                    {% endif %}
+                    {% if frame.vars %}
+                        <div class="commands">
+                            <a href="#" onclick="return varToggle(this, '{{ forloop.counter0 }}')"><span>&#x25b6;</span> {% trans "Local vars" %}</a>
+                        </div>
+                        <table class="table vars" id="v{{ forloop.counter0 }}" style="display:none;">
+                            <colgroup>
+                                <col style="width:100px;">
+                            </colgroup>
+                            <tbody>
+                                {% for key, value in frame.vars.iteritems|as_sorted %}
+                                    <tr>
+                                        <td>{{ key }}</td>
+                                        <td class="code"><pre>{{ value|pprint }}</pre></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+  (function($){
+    function filter_trace(classname){
+      frames = $('.traceback .frame');
+      if (classname == '') {
+        frames.show();
+      } else {
+        frames.hide();
+        frames.filter('.' + classname).show();
+      }
+    }
+    $('#traceback li[data-filter] a').click(function(e){
+      e.preventDefault();
+      tab = $($(this).parent());
+      tab.addClass('active')
+      tab.siblings().removeClass('active');
+      filter_trace(tab.data('filter'));
+    });
+    filter_trace('application');
+  })(jQuery);
+</script>
+
+<div id="raw_stacktrace" style="display: none;">
+    <pre>{{ stacktrace }}</pre>
+</div>
